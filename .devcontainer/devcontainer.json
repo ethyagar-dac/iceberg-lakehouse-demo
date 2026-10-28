@@ -3,7 +3,7 @@
   "name": "iceberg-lakehouse-demo",
 
   // Base image: Debian + Python 3.12 + common dev tools, maintained by Microsoft.
-  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
 
   // Docker-in-Docker: lets us run `docker compose` inside the codespace.
   "features": {
