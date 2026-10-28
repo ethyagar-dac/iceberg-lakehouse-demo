@@ -1,0 +1,38 @@
+# Every target is a command, not a file, so mark them all .PHONY.
+.PHONY: up down ps logs smoke trino reset test lint
+
+# Start the stack in the background, then create the buckets.
+up:
+	docker compose up -d
+	python scripts/init_buckets.py
+
+# Stop containers. Data in ./data is kept.
+down:
+	docker compose down
+
+ps:
+	docker compose ps
+
+logs:
+	docker compose logs -f --tail=100
+
+# Wait until Trino accepts queries, then run the smoke test.
+smoke:
+	@echo "waiting for Trino..."
+	@until docker compose exec -T trino trino --execute "SELECT 1" >/dev/null 2>&1; do sleep 3; done
+	docker compose exec -T trino trino --file /sql/smoke.sql
+
+# Interactive Trino SQL shell.
+trino:
+	docker compose exec trino trino
+
+# Wipe everything: containers AND all data. Rebuild with: make up, then reload.
+reset:
+	docker compose down
+	rm -rf data
+
+test:
+	pytest -q
+
+lint:
+	ruff check .

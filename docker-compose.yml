@@ -1,0 +1,68 @@
+# Local lakehouse: object storage + Iceberg REST catalog + Trino.
+# Airflow is added on Weekend 2.
+# Values like ${MINIO_ROOT_USER} come from the .env file next to this one.
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Object storage (S3-compatible). Plays the role of Amazon S3.
+  # The official minio/minio images were removed from Docker Hub in late 2025,
+  # so this uses pgsty/minio, a community-maintained drop-in build of MinIO.
+  # TODO: after the first successful run, pin a specific tag instead of latest.
+  # ---------------------------------------------------------------------------
+  minio:
+    image: pgsty/minio:latest
+    command: server /data --console-address ":9001"   # 9000 = S3 API, 9001 = web console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./data/minio:/data          # bucket contents live in the repo folder (gitignored)
+
+  # ---------------------------------------------------------------------------
+  # Iceberg REST catalog. Stores, per table, a pointer to the current
+  # metadata.json file. Committing a write = atomically swapping that pointer.
+  # Env vars map to catalog properties: drop CATALOG_, __ -> -, _ -> .
+  #   e.g. CATALOG_S3_PATH__STYLE__ACCESS -> s3.path-style-access
+  # ---------------------------------------------------------------------------
+  rest:
+    image: apache/iceberg-rest-fixture:1.10.0
+    user: root                      # local dev only: lets it write the SQLite file to the bind mount
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+      CATALOG_CATALOG__IMPL: org.apache.iceberg.jdbc.JdbcCatalog
+      CATALOG_URI: jdbc:sqlite:file:/catalog/iceberg_catalog.db   # on disk, not in memory
+      CATALOG_WAREHOUSE: s3://warehouse/                          # default root for new tables
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://minio:9000                      # "minio" = service name above
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"                      # http://host/bucket/key, not bucket.host
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./data/catalog:/catalog     # survives restarts; without this the catalog forgets every table
+    depends_on:
+      - minio
+
+  # ---------------------------------------------------------------------------
+  # Trino: SQL engine for queries, DDL, time travel and table maintenance.
+  # Reads the Iceberg catalog config from trino/catalog/iceberg.properties.
+  # ---------------------------------------------------------------------------
+  trino:
+    image: trinodb/trino:477        # TODO: bump to the current release when you start
+    mem_limit: 4g                   # JVM heap is sized as a percentage of this
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro   # catalog definitions (read-only)
+      - ./sql:/sql:ro                           # SQL files we run with `make smoke`
+    depends_on:
+      - rest

@@ -1,0 +1,31 @@
+// Codespaces / Dev Container definition. Comments are allowed in this file (JSONC).
+{
+  "name": "iceberg-lakehouse-demo",
+
+  // Base image: Debian + Python 3.12 + common dev tools, maintained by Microsoft.
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+
+  // Docker-in-Docker: lets us run `docker compose` inside the codespace.
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  // Ask Codespaces for a 4-core / 16 GB machine (Trino + MinIO + catalog, later Airflow).
+  "hostRequirements": { "cpus": 4, "memory": "16gb" },
+
+  // Runs ONCE, when the codespace is created.
+  // cp -n = copy only if .env doesn't exist yet, so local settings are never overwritten.
+  "postCreateCommand": "cp -n .env.example .env; pip install -r requirements.txt",
+
+  // Runs on EVERY start, including resume after an idle timeout.
+  // This is what brings the stack back up without you doing anything.
+  "postStartCommand": "make up",
+
+  // Ports the codespace forwards to your browser.
+  "forwardPorts": [8080, 8181, 9001],
+  "portsAttributes": {
+    "8080": { "label": "Trino UI" },
+    "8181": { "label": "Iceberg REST catalog" },
+    "9001": { "label": "MinIO console" }
+  }
+}
