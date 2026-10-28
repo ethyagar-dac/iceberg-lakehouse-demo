@@ -19,7 +19,10 @@ INSERT INTO iceberg.smoke.hello VALUES (2, 'second commit');
 SELECT * FROM iceberg.smoke.hello ORDER BY id;
 
 -- Iceberg metadata tables: every commit is a snapshot...
-SELECT snapshot_id, operation, committed_at
+
+SELECT snapshot_id, operation,
+       element_at(summary, 'added-records') AS added,
+       committed_at
 FROM iceberg.smoke."hello$snapshots"
 ORDER BY committed_at;
 
