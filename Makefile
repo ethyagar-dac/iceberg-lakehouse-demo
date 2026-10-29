@@ -3,6 +3,7 @@
 
 # Start the stack in the background, then create the buckets.
 up:
+	@for i in $$(seq 1 60); do docker info >/dev/null 2>&1 && break; echo "waiting for docker..."; sleep 2; done
 	docker compose up -d
 	python scripts/init_buckets.py
 
