@@ -1,11 +1,13 @@
 # Every target is a command, not a file, so mark them all .PHONY.
 .PHONY: up down ps logs smoke trino reset test lint
 
+
 # Start the stack in the background, then create the buckets.
 up:
 	@for i in $$(seq 1 60); do docker info >/dev/null 2>&1 && break; echo "waiting for docker..."; sleep 2; done
 	docker compose up -d
-	python scripts/init_buckets.py
+	PYTHONPATH=src python scripts/init_buckets.py
+	#python scripts/init_buckets.py
 
 # Stop containers. Data in ./data is kept.
 down:
