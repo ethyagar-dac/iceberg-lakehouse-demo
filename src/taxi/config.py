@@ -5,7 +5,9 @@ import os
 import boto3
 
 RAW_BUCKET = "raw"
-TLC_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{month}.parquet"
+TLC_URL = (
+    "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{month}.parquet"
+)
 
 
 def load_env(path: str = ".env") -> None:
@@ -19,6 +21,7 @@ def load_env(path: str = ".env") -> None:
                 key, value = line.split("=", 1)
                 os.environ.setdefault(key, value)
 
+
 def s3_client():
     return boto3.client(
         "s3",
@@ -27,4 +30,3 @@ def s3_client():
         aws_secret_access_key=os.environ["MINIO_ROOT_PASSWORD"],
         region_name=os.environ["AWS_REGION"],
     )
-

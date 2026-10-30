@@ -34,6 +34,9 @@ reset:
 	docker compose down
 	rm -rf data
 
+download:
+	PYTHONPATH=src python -m taxi.download $(MONTH)
+
 test:
 	pytest -q
 
