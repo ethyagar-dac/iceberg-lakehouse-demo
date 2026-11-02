@@ -42,3 +42,5 @@ test:
 
 lint:
 	ruff check .
+load:
+	PYTHONPATH=src python -m taxi.load $(MONTH)

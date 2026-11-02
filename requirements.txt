@@ -1,7 +1,7 @@
 # Python dependencies for scripts and the pipeline (run in the codespace, not in Docker).
 # After the first successful install, pin exact versions: pip freeze | grep -iE 'pyiceberg|pyarrow|boto3'
 
-pyiceberg[pyarrow]   # Iceberg client; pyarrow handles Parquet and S3 file IO
+pyiceberg[pyarrow,pyiceberg-core]   # Iceberg client; pyarrow handles Parquet and S3 file IO
 boto3                # S3 API client, used to create buckets and land raw files
 pytest               # unit tests
 ruff                 # linter
