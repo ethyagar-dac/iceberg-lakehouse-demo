@@ -6,9 +6,10 @@ Safe to run any number of times: existing buckets are left alone.
 
 import sys
 import time
-from taxi.config import load_env, s3_client 
 
 from botocore.exceptions import ClientError, EndpointConnectionError
+
+from taxi.config import load_env, s3_client
 
 BUCKETS = ["raw", "warehouse"]  # raw = files as received; warehouse = Iceberg tables
 
@@ -22,7 +23,9 @@ def wait_for_s3(s3, timeout_s: int = 60) -> None:
             return
         except (EndpointConnectionError, ClientError):
             if time.time() > deadline:
-                sys.exit("MinIO did not respond in time. Check: docker compose logs minio")
+                sys.exit(
+                    "MinIO did not respond in time. Check: docker compose logs minio"
+                )
             time.sleep(2)
 
 
