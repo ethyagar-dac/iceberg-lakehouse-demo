@@ -1,0 +1,30 @@
+# Runs on every push and pull request: lint, format check, unit tests.
+# No Docker needed: the unit tests only exercise the pure transform functions.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip                    # reuse downloaded packages between runs
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Format check
+        run: ruff format --check .      # fails if any file isn't formatted; doesn't change files
+
+      - name: Unit tests
+        run: pytest -q                  # pytest.ini adds src/ to the path
