@@ -46,3 +46,7 @@ load:
 	PYTHONPATH=src python -m taxi.load $(MONTH)
 dq:
 	PYTHONPATH=src python -m taxi.quality $(MONTH)
+	
+# Run a demo file: make demo FILE=02_schema_evolution
+demo:
+	docker compose exec -T trino trino --output-format=ALIGNED --file /sql/demos/$(FILE).sql
