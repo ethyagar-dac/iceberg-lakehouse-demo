@@ -1,0 +1,3 @@
+pyiceberg[pyarrow,pyiceberg-core]
+boto3
+trino

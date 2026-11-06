@@ -5,3 +5,4 @@ pyiceberg[pyarrow,pyiceberg-core]   # Iceberg client; pyarrow handles Parquet an
 boto3                # S3 API client, used to create buckets and land raw files
 pytest               # unit tests
 ruff                 # linter
+trino                # Trino Python client, used by the quality checks

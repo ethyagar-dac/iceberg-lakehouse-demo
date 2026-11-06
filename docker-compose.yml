@@ -66,3 +66,31 @@ services:
       - ./sql:/sql:ro                           # SQL files we run with `make smoke`
     depends_on:
       - rest
+  # ---------------------------------------------------------------------------
+  # Airflow (standalone: scheduler + API server + DAG processor in one container).
+  # Inside Docker, services are reached by name (minio, rest, trino), not localhost.
+  # Run history lives in SQLite inside the container and is disposable:
+  # the pipeline is idempotent, so a rerun reproduces the same tables.
+  # ---------------------------------------------------------------------------
+  airflow:
+    build: ./airflow
+    command: standalone
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "True"   # local only: no login screen
+      PYTHONPATH: /opt/airflow/src
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+      S3_ENDPOINT: http://minio:9000
+      CATALOG_URI: http://rest:8181
+      TRINO_HOST: trino
+    ports:
+      - "8081:8080"                  # Trino already uses 8080 on the host
+    volumes:
+      - ./dags:/opt/airflow/dags:ro  # DAG files
+      - ./src:/opt/airflow/src:ro    # the taxi package the tasks call
+    depends_on:
+      - minio
+      - rest
+      - trino

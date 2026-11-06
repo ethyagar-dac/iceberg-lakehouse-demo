@@ -44,3 +44,5 @@ lint:
 	ruff check .
 load:
 	PYTHONPATH=src python -m taxi.load $(MONTH)
+dq:
+	PYTHONPATH=src python -m taxi.quality $(MONTH)

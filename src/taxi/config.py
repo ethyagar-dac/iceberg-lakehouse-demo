@@ -3,6 +3,7 @@
 import os
 
 import boto3
+from pyarrow import fs
 from pyiceberg.catalog import load_catalog
 
 RAW_BUCKET = "raw"
@@ -50,4 +51,14 @@ def get_catalog():
             "s3.secret-access-key": os.environ["MINIO_ROOT_PASSWORD"],
             "s3.region": os.environ["AWS_REGION"],
         },
+    )
+
+
+def arrow_s3fs() -> fs.S3FileSystem:
+    """pyarrow filesystem for reading files from MinIO (used by load and quality)."""
+    return fs.S3FileSystem(
+        endpoint_override=os.environ["S3_ENDPOINT"].removeprefix("http://"),
+        scheme="http",
+        access_key=os.environ["MINIO_ROOT_USER"],
+        secret_key=os.environ["MINIO_ROOT_PASSWORD"],
     )
